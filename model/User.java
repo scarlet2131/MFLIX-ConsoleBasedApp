@@ -2,6 +2,7 @@ package model;
 
 import enums.Role;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -15,10 +16,11 @@ public class User {
     private String contactDetails;
     private String  securityQuestion ;
     private String securityAnswer;
+    private BigDecimal balance;
 
     // Constructor
     public User() {}
-    public User(String username, String password, String email, Role role, boolean isActive, String contactDetails, String securityQuestion, String securityAnswer) {
+    public User(String username, String password, String email, Role role, boolean isActive, String contactDetails, String securityQuestion, String securityAnswer, BigDecimal balance) {
         this.username = username;
         this.password = password; 
         this.email = email;
@@ -27,6 +29,7 @@ public class User {
         this.contactDetails = contactDetails;
         this.securityQuestion = securityQuestion;
         this.securityAnswer = securityAnswer;
+        this.balance = balance;
     }
 
     // Constructor that takes a ResultSet
@@ -43,9 +46,18 @@ public class User {
         this.contactDetails = rs.getString("contactDetails");
         this.securityQuestion = rs.getString("security_question");
         this.securityAnswer = rs.getString("security_answer");
+        this.balance = rs.getBigDecimal("balance");
     }
 
     // Getters and Setters
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
     public int getUserId() {
         return userId;
     }

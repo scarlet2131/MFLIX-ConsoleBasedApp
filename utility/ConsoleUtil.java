@@ -1,5 +1,6 @@
 package utility;
 
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class ConsoleUtil {
@@ -76,18 +77,37 @@ public class ConsoleUtil {
             }
         }
     }
-    // Utility method to get validated boolean input
-//    public static boolean getBooleanInput(String prompt) {
-//        while (true) {
-//            System.out.print(prompt + " (true/false): ");
-//            String input = scanner.nextLine().trim().toLowerCase();
-//            if (input.equals("true")) {
-//                return true;
-//            } else if (input.equals("false")) {
-//                return false;
-//            } else {
-//                System.out.println("Invalid input. Please enter true or false.");
-//            }
-//        }
-//    }
+
+    // Utility method to get BigDecimal input
+    public static BigDecimal getBigDecimalInput(String prompt, boolean allowEmpty) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty() && allowEmpty) {
+                return null; // Return null for optional fields
+            }
+            try {
+                return new BigDecimal(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
+    }
+
+    //Confirmation
+    public static boolean confirm(String prompt) {
+        while (true) {
+            System.out.print(prompt + " (y/n): ");
+            String input = scanner.nextLine().trim().toLowerCase();
+
+            if ("y".equals(input)) {
+                return true;
+            } else if ("n".equals(input)) {
+                return false;
+            } else {
+                System.out.println("Invalid input. Please enter 'y' for yes or 'n' for no.");
+            }
+        }
+    }
+
 }

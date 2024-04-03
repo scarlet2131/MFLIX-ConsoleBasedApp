@@ -9,11 +9,17 @@ import enums.Role;
 import model.User;
 import utility.EmailValidator;
 
+import java.math.BigDecimal;
+
 public class UserServiceImpl implements UserService {
     private UserDao userDao = new UserDaoImpl();
 
 
     public User convertToUserEntity(UserRegistrationDTO registrationDTO) {
+        if (registrationDTO.getBalance() == null) {
+            registrationDTO.setBalance(BigDecimal.ZERO); // Default balance
+        }
+
         User user = new User();
         user.setUsername(registrationDTO.getUsername());
         user.setEmail(registrationDTO.getEmail());
@@ -21,6 +27,7 @@ public class UserServiceImpl implements UserService {
         user.setContactDetails(registrationDTO.getContactDetails());
         user.setSecurityQuestion(registrationDTO.getSecurityQuestion());
         user.setSecurityAnswer(registrationDTO.getSecurityAnswer());
+        user.setBalance(registrationDTO.getBalance());
 
         // Set default values for fields not present in the DTO
         user.setRole(Role.USER); // Default role
@@ -52,14 +59,14 @@ public class UserServiceImpl implements UserService {
     }
 
    @Override
-    public Role loginUser(UserLoginDTO userLoginDTO) {
+    public User loginUser(UserLoginDTO userLoginDTO) {
         User user = userDao.findByUsername(userLoginDTO.getUsername());
         if (user != null && user.getPassword().equals(userLoginDTO.getPassword())) { // Ensure passwords are hashed and compared securely
             // Return the user's role on successful login
-            return user.getRole();
+            return user;
         } else {
             // Return a value indicating login failure, could be null or a specific failure role
-            return Role.INVALID; // Assuming UserRole is an enum that includes INVALID
+            return null;
         }
     }
     @Override
@@ -74,6 +81,25 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getSecurityQuestion(String email){
         return userDao.getSecurityQuestion(email);
+    }
+
+    @Override
+    public boolean updateUserBalance(int userId, BigDecimal amount) {
+        if(userDao.findByUserId(userId)==null){
+            System.out.println(" Balance could not be updated, User dosen't exist!!");
+            return false;
+        }
+        return userDao.updateUserBalance(userId, amount);
+    }
+
+    @Override
+    public User getUserDetails(int userId){
+        return userDao.findByUserId(userId);
+    }
+
+    @Override
+    public boolean updateUserDetails(User user) {
+        return userDao.updateUserDetails(user);
     }
 
 }

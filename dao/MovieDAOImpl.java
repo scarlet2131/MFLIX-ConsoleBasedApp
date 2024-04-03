@@ -1,12 +1,15 @@
 package dao;
 
 import model.Movie;
+import model.User;
 import utility.DBConnection;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,4 +114,66 @@ public class MovieDAOImpl implements MovieDAO{
         }
         return movies;
     }
+    @Override
+    public boolean isMovieAvailable(int movieId) {
+        String query = "SELECT IsAvailable FROM movies WHERE MovieID = ? AND IsAvailable = TRUE";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, movieId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                // If there's a result, the movie exists and is available
+                return rs.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+
+    @Override
+    public Movie getMovieById(int movieId){
+        String sql = "SELECT * FROM movies WHERE movieID = ? and isAvailable = true";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, movieId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                // Assuming a constructor User(ResultSet rs) exists that maps the result set to a User object
+                return new Movie(rs);
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public List<Movie> searchMoviesByTitle(String title) {
+        List<Movie> movies = new ArrayList<>();
+        String sql = "SELECT * FROM movies WHERE title LIKE ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, "%" + title + "%"); // Use LIKE for partial matches
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                movies.add(new Movie(
+                        rs.getInt("MovieID"),
+                        rs.getString("Title"),
+                        rs.getString("Genre"),
+                        rs.getInt("ReleaseYear"),
+                        rs.getBoolean("IsAvailable")
+                ));
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return movies;
+    }
+
 }
