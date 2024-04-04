@@ -14,7 +14,9 @@ public interface MovieDAO {
     List<Movie> getAllMovies();
     boolean isMovieAvailable(int movieId);
 //    boolean rentMovieAndUpdateBalance(int userId, int movieId, LocalDate startDate, LocalDate dueDate, BigDecimal cost);
-    Movie getMovieById(int movieId);
+    Movie getMovieById(int movieId, boolean checkAvailabilty);
 
     List<Movie> searchMoviesByTitle(String title);
+
+    List<Movie> searchMovies(String genre, Integer year, Double rating, String sortBy);
 }

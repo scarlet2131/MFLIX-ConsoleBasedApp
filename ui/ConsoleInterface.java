@@ -1,18 +1,18 @@
 package ui;
 
-import dto.MovieDTO;
-import dto.UserLoginDTO;
-import dto.UserPasswordUpdateDTO;
-import dto.UserRegistrationDTO;
+import dto.*;
 import enums.Role;
 import model.Movie;
+import model.Rating;
 import model.Rental;
 import model.User;
 import service.*;
 import utility.ConsoleUtil;
+import utility.RentalUtils;
 import utility.SessionManager;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -194,53 +194,51 @@ public class ConsoleInterface {
         }
 
         int choice = 0;
-        while( choice !=  5 ){
-            System.out.println("\n=== Update Personal Details ===");
-            System.out.println("1. Email");
-            System.out.println("2. Username");
-            System.out.println("3. Contact Details");
-            System.out.println("4. Password");
-            System.out.println("5. Cancel");
-            System.out.print("Choose an option to update: ");
+        System.out.println("\n=== Update Personal Details ===");
+        System.out.println("1. Email");
+        System.out.println("2. Username");
+        System.out.println("3. Contact Details");
+        System.out.println("4. Password");
+        System.out.println("5. Cancel");
+        System.out.print("Choose an option to update: ");
 
-            choice = ConsoleUtil.getIntInput(" ", 1, 5, false);
+        choice = ConsoleUtil.getIntInput(" ", 1, 5, false);
 
-            switch (choice) {
-                case 1:
-                    String newEmail = ConsoleUtil.getInput("Enter new email: ");
-                    user.setEmail(newEmail);
-                    break;
-                case 2:
-                    String newUsername = ConsoleUtil.getInput("Enter new username: ");
-                    user.setUsername(newUsername);
-                    break;
-                case 3:
-                    String newContactDetails = ConsoleUtil.getInput("Enter new contact details: ");
-                    user.setContactDetails(newContactDetails);
-                    break;
-                case 4:
-                    String newPassword = ConsoleUtil.getInput("Enter new password: ");
-                    // Assuming UserService can handle password hashing internally
-                    user.setPassword(newPassword);
-                    break;
-                case 5:
-                    System.out.println("Update cancelled.");
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please choose again.");
-                    return;
-            }
-
-            // Update user details
-            boolean success = userService.updateUserDetails(user);
-            if (success) {
-                System.out.println("User details updated successfully.");
-            } else {
-                System.out.println("Failed to update user details.");
-            }
+        switch (choice) {
+            case 1:
+                String newEmail = ConsoleUtil.getInput("Enter new email: ");
+                user.setEmail(newEmail);
+                break;
+            case 2:
+                String newUsername = ConsoleUtil.getInput("Enter new username: ");
+                user.setUsername(newUsername);
+                break;
+            case 3:
+                String newContactDetails = ConsoleUtil.getInput("Enter new contact details: ");
+                user.setContactDetails(newContactDetails);
+                break;
+            case 4:
+                String newPassword = ConsoleUtil.getInput("Enter new password: ");
+                // Assuming UserService can handle password hashing internally
+                user.setPassword(newPassword);
+                break;
+            case 5:
+                System.out.println("Update cancelled.");
+                return;
+            default:
+                System.out.println("Invalid choice. Please choose again.");
+                return;
         }
 
+        // Update user details
+        boolean success = userService.updateUserDetails(user);
+        if (success) {
+            System.out.println("User details updated successfully.");
+        } else {
+            System.out.println("Failed to update user details.");
+        }
     }
+
 
 //--------------------------------------Movie CRUD Actions----------------------------------------
 
@@ -373,7 +371,8 @@ public class ConsoleInterface {
         for (Movie movie : movies) {
             System.out.println("ID: " + movie.getMovieId() + ", Title: " + movie.getTitle() +
                     ", Genre: " + movie.getGenre() + ", Release Year: " + movie.getReleaseYear() +
-                    ", Available: " + (movie.isAvailable() ? "Yes" : "No"));
+                    ", Available: " + (movie.isAvailable() ? "Yes" : "No") +
+                    ", Rating: "+ movie.getAverageRating());
         }
         return mapOfMovies;
     }
@@ -392,19 +391,21 @@ public class ConsoleInterface {
     public static void showUserMenu() {
         int option = 0;
 
-        while (option != 8) {
+        while (option != 10) {
             System.out.println("\n--- User Menu ---");
             System.out.println("1. View All Movies");
             System.out.println("2. Rent a Movie");
-            System.out.println("3. View Rental History");
-            System.out.println("4. View personal information");
-            System.out.println("5. Update personal information");
-            System.out.println("6. Search movie by title");
-            System.out.println("7. Add Balance to wallet");
-            System.out.println("8. Logout");
+            System.out.println("3. Rate a Movie");
+            System.out.println("4. View Rental History");
+            System.out.println("5. View personal information");
+            System.out.println("6. Update personal information");
+            System.out.println("7. Search movie by title");
+            System.out.println("8. Add Balance to wallet");
+            System.out.println("9. Search and filter movies");
+            System.out.println("10. Logout");
 
             System.out.print("Enter option: ");
-            option = ConsoleUtil.getIntInput("Please enter your choice : ",1, 8, false);
+            option = ConsoleUtil.getIntInput("Please enter your choice : ",1, 10, false);
 
             switch (option) {
                 case 1:
@@ -414,23 +415,28 @@ public class ConsoleInterface {
                     rentMovie();  // Method to handle movie rental
                     break;
                 case 3:
-                    viewRentalHistory();  // Method to handle movie rental
+                    rateMovie();  // Method to handle movie rental
                     break;
                 case 4:
-                    viewPersonaldetails();  // Method to handle movie rental
+                    viewRentalHistory();  // Method to handle movie rental
                     break;
                 case 5:
-                    updatePersonalDetails();  // Method to handle movie rental
+                    viewPersonaldetails();  // Method to handle movie rental
                     break;
                 case 6:
+                    updatePersonalDetails();  // Method to handle movie rental
+                    break;
+                case 7:
                     searchMovieByTitle();  // Method to handle movie rental
                     break;
                 // Handle other cases
-                case 7:
+                case 8:
                     addBalanceToWallet();  // Method to handle movie rental
                     break;
-
-                case 8:
+                case 9:
+                    searchAndFilterMovies();  // Method to handle movie rental
+                    break;
+                case 10:
                     SessionManager.logout();
                     System.out.println("Logging out...");
                     startApplication();
@@ -441,29 +447,16 @@ public class ConsoleInterface {
         }
     }
 
-
-    public static void rentMovie() {
-        User user = SessionManager.getCurrentUser();
-        if (user == null) {
-            System.out.println("Please log in first.");
+    public static void rentSelectedMovie(Movie movie, User user) {
+        if (movie == null || user == null) {
+            System.out.println("Invalid movie or user.");
             return;
         }
-        displayUserInfo(user);
+
         displayRentalPackages();
-
-        Map<Integer, Movie> movies = viewAllMovies(); // Assumes implementation that lists available movies
-
-        int movieId = ConsoleUtil.getIntInput("Enter Movie ID to rent: ",null,null,false);
-        if (!movies.containsKey(movieId)) {
-            System.out.println("Movie not found. Please enter a valid Movie ID.");
-            return;
-        }
-
-        Movie movieToRent = movies.get(movieId);
-
-        int packageChoice = ConsoleUtil.getIntInput("Select your rental package (1 to 4): ",1,4, false);
-        int cost = calculatePackageCost(packageChoice);
-        if (user.getBalance().compareTo(BigDecimal.valueOf(cost)) < 0) {
+        int packageChoice = ConsoleUtil.getIntInput("Select your rental package (1 to 4): ", 1, 4, false);
+        BigDecimal cost = RentalUtils.calculatePackageCost(packageChoice);
+        if (user.getBalance().compareTo(cost) < 0) {
             System.out.println("Insufficient balance. Please recharge or select a different package.");
             return;
         }
@@ -474,8 +467,37 @@ public class ConsoleInterface {
             return;
         }
 
-        String result = rentalService.rentMovie(user.getUserId(), movieToRent, packageChoice, BigDecimal.valueOf(cost));
+        String result = rentalService.rentMovie(new RentalDTO(
+                user.getUserId(),
+                movie.getMovieId(),
+                LocalDate.now(),
+                RentalUtils.calculateDueDate(packageChoice),
+                cost
+        ));
         System.out.println(result);
+    }
+
+    public static void rentMovie() {
+        User user = SessionManager.getCurrentUser();
+        if (user == null) {
+            System.out.println("Please log in first.");
+            return;
+        }
+        displayUserInfo(user);
+
+        Map<Integer, Movie> movies = viewAllMovies(); // Assumes implementation that lists available movies
+
+        if(movies==null || movies.isEmpty()){
+            return;
+        }
+        int movieId = ConsoleUtil.getIntInput("Enter Movie ID to rent: ", null, null, false);
+        Movie movieToRent = movies.get(movieId);
+        if (movieToRent == null) {
+            System.out.println("Movie not found. Please enter a valid Movie ID.");
+            return;
+        }
+
+        rentSelectedMovie(movieToRent, user);
     }
 
     private static void displayRentalPackages() {
@@ -510,12 +532,13 @@ public class ConsoleInterface {
             System.out.println("\nRental History:");
             for (Rental rental : rentals) {
                 // Assuming you have a method to fetch movie title by ID
-                Movie movie = movieService.getMovieDetails(rental.getMovieId());
-                System.out.printf("Movie: %s, Rented On: %s, Due On: %s, Status: %s%n",
+                Movie movie = movieService.getMovieDetails(rental.getMovieId(),false);
+                System.out.printf("Movie: %s, Rented On: %s, Due On: %s, Status: %s, Movie Availability: %s%n",
                         movie.getTitle(),
                         rental.getStartDate(),
                         rental.getDueDate(),
-                        rental.getStatus());
+                        rental.getStatus(),
+                        movie.isAvailable() ? "Yes" : "No");
             }
         }
     }
@@ -540,6 +563,7 @@ public class ConsoleInterface {
         // Attempt to update the user's balance
         boolean success = userService.updateUserBalance(userId, amountToAdd);
         if (success) {
+            SessionManager.updateBalance(amountToAdd);
             System.out.println("Your wallet has been successfully updated.");
         } else {
             System.out.println("Failed to update your wallet. Please try again.");
@@ -551,17 +575,27 @@ public class ConsoleInterface {
         String title = ConsoleUtil.getInput(""); // Assuming ConsoleUtil.getInput() method exists for user input
 
         List<Movie> movies = movieService.searchMoviesByTitle(title);
+        boolean movieAvailability = false;
         if (movies.isEmpty()) {
             System.out.println("No movies found matching \"" + title + "\".");
         } else {
             System.out.println("Movies found:");
             for (Movie movie : movies) {
+                if(movie.isAvailable()){
+                    movieAvailability = true;
+                }
                 System.out.printf("ID: %d, Title: %s, Genre: %s, Release Year: %d, Available: %s\n",
                         movie.getMovieId(),
                         movie.getTitle(),
                         movie.getGenre(),
                         movie.getReleaseYear(),
                         movie.isAvailable() ? "Yes" : "No");
+
+            }
+
+            if(!movieAvailability){
+                System.out.println("Sorry, No movies available to rent");
+                return;
             }
 
             // Ask if the user wants to rent a movie from the search results
@@ -576,15 +610,17 @@ public class ConsoleInterface {
 
     private static void rentMovieFromSearchResults(List<Movie> movies) {
         User currentUser = SessionManager.getCurrentUser();
-        System.out.print("Enter the ID of the movie you want to rent (or 0 to cancel): ");
-        int movieId = ConsoleUtil.getIntInput("Movie ID: ", 0, null, false);
+        if (currentUser == null) {
+            System.out.println("Rental cancelled. No user logged in.");
+            return;
+        }
 
+        int movieId = ConsoleUtil.getIntInput("Enter the ID of the movie you want to rent (or 0 to cancel): ", 0, null, false);
         if (movieId == 0) {
             System.out.println("Rental cancelled.");
             return;
         }
 
-        // Check if the selected movie ID is in the list of search results and is available
         Movie selectedMovie = movies.stream()
                 .filter(movie -> movie.getMovieId() == movieId && movie.isAvailable())
                 .findFirst()
@@ -595,27 +631,86 @@ public class ConsoleInterface {
             return;
         }
 
-        int packageChoice = ConsoleUtil.getIntInput("Select your rental package (1 to 4): ",1,4, false);
-        int cost = calculatePackageCost(packageChoice);
-        if (currentUser.getBalance().compareTo(BigDecimal.valueOf(cost)) < 0) {
-            System.out.println("Insufficient balance. Please recharge or select a different package.");
-            return;
-        }
-
-        boolean confirm = ConsoleUtil.confirm("Confirm rental for $" + cost + "?");
-        if (!confirm) {
-            System.out.println("Rental cancelled.");
-            return;
-        }
-        // Proceed with renting the selected movie
-        String result = rentalService.rentMovie(SessionManager.getCurrentUserId(), selectedMovie,packageChoice, BigDecimal.valueOf(cost));
-        System.out.println(result);
+        rentSelectedMovie(selectedMovie, currentUser);
     }
 
 
+    public static void searchAndFilterMovies() {
+        // Show all movies first
+        Map<Integer, Movie> movieMap = viewAllMovies();
+        if(movieMap==null || movieMap.isEmpty()){
+            return;
+        }
+
+        if (!ConsoleUtil.confirm("Would you like to apply filters or sorting to the movie list?")) {
+            return; // Exit if the user does not want to filter or sort
+        }
+
+        // Proceed with filtering and sorting
+        System.out.println("\nEnter filter options (leave blank for no filter):");
+        String genre = ConsoleUtil.getOptionalInput("Genre: ");
+        Integer year = ConsoleUtil.getIntInput("Year (YYYY): ", 1870, LocalDate.now().getYear(), true);
+        Double rating = ConsoleUtil.getDoubleInput("Minimum rating: ", 0.0, 10.0, true);
+
+        System.out.println("\nSort options:");
+        System.out.println("1. Title");
+        System.out.println("2. Genre");
+        System.out.println("3. Release Year");
+        System.out.println("4. Rating");
+        System.out.println("5. No Sorting");
+        int sortOption = ConsoleUtil.getIntInput("Choose sort option (1-5): ", 1, 5, false);
+
+        String sortBy = mapSortOptionToColumn(sortOption);
+        MovieSearchDTO searchCriteria = new MovieSearchDTO(
+                genre.isEmpty() ? null : genre,
+                year,
+                rating,
+                sortBy.isEmpty() ? null : sortBy
+        );
+
+        List<Movie> filteredMovies = movieService.searchMovies(searchCriteria);
+        if (filteredMovies.isEmpty()) {
+            System.out.println("No movies found with the given criteria.");
+        } else {
+            filteredMovies.forEach(movie -> System.out.printf("ID: %s, Title: %s, Genre: %s, Year: %d%n",
+                    movie.getMovieId(), movie.getTitle(), movie.getGenre(), movie.getReleaseYear()));
+            // Optionally, include rating in the output if implemented
+        }
+    }
+    private static String mapSortOptionToColumn(int sortOption) {
+        switch (sortOption) {
+            case 1: return "title";
+            case 2: return "genre";
+            case 3: return "releaseYear";
+            case 4: return "rating"; // Make sure this corresponds with how you handle ratings aggregation in the query
+            default: return null; // No sorting
+        }
+    }
 
 
+    public static void rateMovie() {
+        int userId = SessionManager.getCurrentUserId();
+        if (userId <= 0) {
+            System.out.println("Please log in first.");
+            return;
+        }
 
+        Map<Integer, Movie> movieMap = viewAllMovies();
+        if(movieMap==null || movieMap.isEmpty()){
+            return;
+        }
+
+        int movieId = ConsoleUtil.getIntInput("Enter Movie ID to rate: ", null, null, false);
+        int rating = ConsoleUtil.getIntInput("Enter your rating (1-10): ", 1, 10, false);
+
+
+        boolean success = movieService.addRating(new Rating(movieId, userId, rating));
+        if (success) {
+            System.out.println("Thank you for rating the movie!");
+        } else {
+            System.out.println("Failed to add rating.");
+        }
+    }
 
 
 }

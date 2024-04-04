@@ -62,10 +62,13 @@ public class ConsoleUtil {
     }
 
     // Utility method to get validated double input
-    public static Double getDoubleInput(String prompt, Double min, Double max) {
+    public static Double getDoubleInput(String prompt, Double min, Double max, boolean allowEmpty) {
         while (true) {
             System.out.print(prompt);
             String input = scanner.nextLine();
+            if (input.isEmpty() && allowEmpty) {
+                return null; // Return null for optional fields
+            }
             try {
                 double value = Double.parseDouble(input);
                 if ((min == null || value >= min) && (max == null || value <= max)) {

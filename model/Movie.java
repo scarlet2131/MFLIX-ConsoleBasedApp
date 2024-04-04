@@ -10,7 +10,7 @@ public class Movie {
     private String title;
     private String genre;
     private Integer releaseYear;
-    private Boolean isAvailable;
+    private Boolean isAvailable;private Double averageRating; // This field does not directly map to a column in the movies table
 
     // Constructors
     public Movie() {
@@ -31,6 +31,16 @@ public class Movie {
         this.isAvailable = isAvailable;
     }
 
+    // Constructor that includes the averageRating parameter
+    public Movie(int movieID, String title, String genre, int releaseYear, boolean isAvailable, Double averageRating) {
+        this.movieId = movieID;
+        this.title = title;
+        this.genre = genre;
+        this.releaseYear = releaseYear;
+        this.isAvailable = isAvailable;
+        this.averageRating = averageRating;
+    }
+
 
     public Movie(ResultSet rs) throws SQLException {
         // Assuming column names in the ResultSet match the field names
@@ -39,6 +49,7 @@ public class Movie {
         this.genre = rs.getString("genre");
         this.releaseYear = rs.getInt("releaseYear");
         this.isAvailable = rs.getBoolean("isAvailable");
+        this.averageRating = rs.getDouble("averageRating");
     }
 
     // Getters and setters
@@ -68,6 +79,14 @@ public class Movie {
 
     public void setAvailable(Boolean available) {
         this.isAvailable = available;
+    }
+
+    public Double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(Double averageRating) {
+        this.averageRating = averageRating;
     }
 
 
