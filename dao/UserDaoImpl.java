@@ -189,7 +189,6 @@ public class UserDaoImpl implements UserDao {
             parameters.add(user.getPassword()); // Assume hashing is handled elsewhere
             isFirst = false;
         }
-        // Add any additional fields to update in a similar fashion
 
         // Avoid updating if no fields were provided for update
         if (isFirst) {

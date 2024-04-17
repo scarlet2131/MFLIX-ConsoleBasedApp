@@ -21,9 +21,7 @@ public class RentalServiceImpl implements RentalService{
         return rentalDAO.getRentalHistoryForUser(userId);
     }
 
-    @Override
     public String rentMovie(RentalDTO rentalDTO) {
-
         // Attempt to create rental and update balance
         boolean success = rentalDAO.rentMovieAndUpdateBalance(rentalDTO.getUserId(), rentalDTO.getMovieId(), rentalDTO.getStartDate(), rentalDTO.getDueDate(), rentalDTO.getCost());
 
@@ -31,7 +29,7 @@ public class RentalServiceImpl implements RentalService{
             SessionManager.updateBalance(rentalDTO.getCost().negate());
             return "Movie rented successfully. Enjoy your movie!";
         } else {
-            return "Failed to rent movie or update balance. Please try again.";
+            return "Failed to rent movie or update balance. The movie may already be rented or unavailable.";
         }
     }
 

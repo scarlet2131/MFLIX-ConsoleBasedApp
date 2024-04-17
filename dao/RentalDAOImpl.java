@@ -64,16 +64,24 @@ public class RentalDAOImpl implements RentalDAO{
 
     @Override
     public boolean rentMovieAndUpdateBalance(int userId, int movieId, LocalDate startDate, LocalDate dueDate, BigDecimal cost) {
-        // Transactional block to ensure data integrity
+        // Check if the movie is already rented
+        String checkAvailabilityQuery = "SELECT COUNT(*) FROM rentals WHERE MovieID = ? AND UserID = ? AND Status = 'RENTED' AND DueDate > CURRENT_DATE";
         String createRentalQuery = "INSERT INTO rentals (UserID, MovieID, StartDate, DueDate, Status) VALUES (?, ?, ?, ?, 'RENTED')";
         String updateUserBalanceQuery = "UPDATE users SET balance = balance - ? WHERE user_id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
-            // Start transaction
             conn.setAutoCommit(false);
 
-            try (PreparedStatement createRentalStmt = conn.prepareStatement(createRentalQuery);
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkAvailabilityQuery);
+                 PreparedStatement createRentalStmt = conn.prepareStatement(createRentalQuery);
                  PreparedStatement updateUserBalanceStmt = conn.prepareStatement(updateUserBalanceQuery)) {
+
+                checkStmt.setInt(1, movieId);
+                checkStmt.setInt(2,userId);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return false; // Movie is currently rented
+                }
 
                 // Create rental record
                 createRentalStmt.setInt(1, userId);
@@ -92,7 +100,6 @@ public class RentalDAOImpl implements RentalDAO{
                     return false;
                 }
 
-                // Commit transaction
                 conn.commit();
                 return true;
             } catch (SQLException e) {
@@ -103,8 +110,8 @@ public class RentalDAOImpl implements RentalDAO{
             e.printStackTrace();
             return false;
         }
-
     }
+
 
 }
 

@@ -10,7 +10,8 @@ public class Movie {
     private String title;
     private String genre;
     private Integer releaseYear;
-    private Boolean isAvailable;private Double averageRating; // This field does not directly map to a column in the movies table
+    private Boolean isAvailable;
+    private Double averageRating; // This field does not directly map to a column in the movies table
 
     // Constructors
     public Movie() {

@@ -58,6 +58,7 @@ public class UserServiceImpl implements UserService {
         return userDao.addUser(convertToUserEntity(registrationDTO));
     }
 
+
    @Override
     public User loginUser(UserLoginDTO userLoginDTO) {
         User user = userDao.findByUsername(userLoginDTO.getUsername());
@@ -99,6 +100,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean updateUserDetails(User user) {
+        if (!EmailValidator.validate(user.getEmail())) {
+            System.out.println("Please enter valid email, Invalid email format!!");
+            return false;
+        }
+
+        User userByUsername = userDao.findByUsername(user.getUsername());
+        // Check for unique username
+        if (userByUsername != null && user.getUserId()!= userByUsername.getUserId()) {
+            System.out.println("Please enter different username, Username already exists!!");
+            return false;
+        }
+
+        User userByEmail = userDao.findByEmail(user.getEmail());
+
+        // Check for unique email
+        if (userByEmail != null  && user.getUserId()!= userByEmail.getUserId()) {
+            System.out.println("Please enter different email, Email already exists!!");
+            return false;
+        }
         return userDao.updateUserDetails(user);
     }
 

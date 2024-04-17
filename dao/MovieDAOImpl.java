@@ -78,19 +78,34 @@ public class MovieDAOImpl implements MovieDAO{
     }
 
     public boolean deleteMovie(int movieId) {
-        String sql = "DELETE FROM movies WHERE MovieID = ?;"; // SQL statement to delete a movie
+        String sqlDelete = "DELETE FROM movies WHERE MovieID = ? AND NOT EXISTS (SELECT 1 FROM rentals WHERE MovieID = ?) AND NOT EXISTS (SELECT 1 FROM ratings WHERE MovieID = ?);"; // SQL statement to delete a movie if not referenced
+        String sqlUpdate = "UPDATE movies SET IsAvailable = FALSE WHERE MovieID = ?;"; // Make the movie unavailable if it cannot be deleted
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, movieId); // Set the movie ID in the query
+             PreparedStatement pstmtDelete = conn.prepareStatement(sqlDelete);
+             PreparedStatement pstmtUpdate = conn.prepareStatement(sqlUpdate)) {
 
-            int affectedRows = pstmt.executeUpdate(); // Execute the update
-            return affectedRows > 0; // Return true if the movie was deleted
+            // Attempt to delete the movie first
+            pstmtDelete.setInt(1, movieId);
+            pstmtDelete.setInt(2, movieId);
+            pstmtDelete.setInt(3, movieId);
+            int affectedRows = pstmtDelete.executeUpdate(); // Execute the delete
+
+            if (affectedRows > 0) {
+                return true; // Movie was deleted successfully
+            } else {
+                // If the movie was not deleted, it might be in use. Set it as unavailable.
+                pstmtUpdate.setInt(1, movieId);
+                pstmtUpdate.executeUpdate(); // Execute the update
+                System.out.println("The movie is currently in use and cannot be deleted. It has been marked as not available instead.");
+                return false; // Return false but inform the user that the movie is now unavailable
+            }
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
-            return false; // Return false if there was a problem deleting the movie
+            return false; // Return false if there was a problem deleting the movie or making it unavailable
         }
     }
+
 
     public List<Movie> getAllMovies() {
         List<Movie> movies = new ArrayList<>();
@@ -104,13 +119,7 @@ public class MovieDAOImpl implements MovieDAO{
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                Movie movie = new Movie();
-                movie.setMovieId(rs.getInt("MovieID"));
-                movie.setTitle(rs.getString("Title"));
-                movie.setGenre(rs.getString("Genre"));
-                movie.setReleaseYear(rs.getInt("ReleaseYear"));
-                movie.setAvailable(rs.getBoolean("IsAvailable"));
-                movie.setAverageRating(rs.getDouble("averageRating"));
+                Movie movie = new Movie(rs);
                 movies.add(movie);
             }
         } catch (SQLException | ClassNotFoundException e) {
@@ -143,7 +152,7 @@ public class MovieDAOImpl implements MovieDAO{
                 "LEFT JOIN ratings r ON m.MovieID = r.MovieID " +
                 "WHERE m.MovieID = ?  " ;
         if(checkAvailabilty){
-            sql += " IsAvailable = TRUE ";
+            sql += " AND IsAvailable = TRUE ";
         }
         String groupBy = "GROUP BY m.MovieID, m.Title, m.Genre, m.ReleaseYear, m.IsAvailable";
         sql += groupBy;
@@ -196,9 +205,10 @@ public class MovieDAOImpl implements MovieDAO{
     @Override
     public List<Movie> searchMovies(String genre, Integer year, Double rating, String sortBy) {
         List<Movie> movies = new ArrayList<>();
-        // Include a JOIN with the ratings table if filtering or sorting by rating
+        // Start the base query including a LEFT JOIN with the ratings table if needed.
         String baseQuery = "SELECT m.*, AVG(r.rating) as averageRating FROM movies m " +
                 "LEFT JOIN ratings r ON m.MovieID = r.MovieID WHERE 1=1 ";
+
         List<Object> params = new ArrayList<>();
 
         if (genre != null) {
@@ -209,20 +219,27 @@ public class MovieDAOImpl implements MovieDAO{
             baseQuery += " AND m.releaseYear = ?";
             params.add(year);
         }
+
+        // GROUP BY before HAVING
+        baseQuery += " GROUP BY m.MovieID";
+
         if (rating != null) {
             baseQuery += " HAVING AVG(r.rating) >= ?";
             params.add(rating);
         }
 
-        // Sorting
+        // Now handle the ORDER BY
         if (sortBy != null && !sortBy.isEmpty()) {
+            baseQuery += " ORDER BY ";
             if ("rating".equals(sortBy)) {
-                baseQuery += " GROUP BY m.MovieID ORDER BY averageRating"; // When sorting by rating
+                // Ensuring that 'averageRating' is included in the SELECT part of the query as AVG(r.Rating)
+                baseQuery += "averageRating"; // When sorting by rating, which should be an aggregated field already selected
             } else {
-                baseQuery += " GROUP BY m.MovieID ORDER BY m." + sortBy; // Ensure sortBy is a controlled or sanitized input
+                baseQuery += "m." + sortBy; // Directly sorting by columns in 'movies'
             }
         } else {
-            baseQuery += " GROUP BY m.MovieID";
+            // Default sorting or no sorting
+            baseQuery += " ORDER BY m.MovieID"; // Default ordering if no specific sort is defined
         }
 
         try (Connection conn = DBConnection.getConnection();
@@ -245,7 +262,6 @@ public class MovieDAOImpl implements MovieDAO{
 
         return movies;
     }
-
 
 //    @Override
 //    public List<Movie> searchMovies(String genre, Integer year, Double rating, String sortBy) {

@@ -6,6 +6,9 @@ import java.util.Scanner;
 public class ConsoleUtil {
     private static final Scanner scanner = new Scanner(System.in);
 
+    private ConsoleUtil() {
+    }
+
     // Utility method to get non-empty input
     public static String getInput(String prompt) {
         String input;
